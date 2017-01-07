@@ -3,13 +3,16 @@
 var fs = require('fs');
 var path = require('path');
 var argv = require('optimist').argv;
-var imagic = require('imagemagick');
+var imager = require('imagemagick');
+//var imager = require('lwip');
 
 
 if(argv.help) {
-	console.log('\t--maxw="2048"\t\tМаксимальная ширина, пикс.'); // argv.maxw
-	console.log('\t--maxh="2048"\t\tМаксимальная высота, пикс.'); // argv.maxh
-	console.log('\t--dir="строка"\t\tДиректория поиска (по умолчанию ./)'); // argv.dir
+	console.log('\t--maxw="2048"\t\t\tМаксимальная ширина, пикс.'); // argv.maxw
+	//console.log('\t--maxh="2048"\t\tМаксимальная высота, пикс.'); // argv.maxh
+	console.log('\t--maxsize="1024"\t\tМаксимальный размер файла, кБайт'); // argv.maxh
+	console.log('\t--dir="строка"\t\t\tДиректория поиска (по умолчанию ./)'); // argv.dir
+	console.log('\t--action="resize|find"\t\t\tДействие с найденным (по умолчанию resize)'); // argv.dir
 	//console.log('\t--set="строка"\t\tЗаменять на (по умолчанию не заменяет)'); // argv.set
 	//console.log('\t--fmask="строка"\tПоиск только в файлах, в имени которых есть данная строка'); // argv.fmask
 	//console.log('\t--help\t\t\tВывод этой справки'); // argv.help
@@ -19,20 +22,64 @@ if(argv.help) {
 
 var		root = argv.dir ? argv.dir : './',
 		maxw = argv.maxw ? parseInt(argv.maxw) : 2048,
-		maxh = argv.maxh ? parseInt(argv.maxh) : 2048,
+		//maxh = argv.maxh ? parseInt(argv.maxh) : 2048,
+		maxsize = argv.maxsize ? (parseInt(argv.maxsize) * 1024) : (1024 * 1024),
+		action = argv.action ? argv.action : 'resize',
 		//re_search = new RegExp('(' + argv.search + ')', 'ig'),
-		fmask = argv.fmask ? new RegExp('(' + argv.fmask + ')', 'ig') : new RegExp('(.jpg)', 'ig')
+		fmask = argv.fmask ? new RegExp('(' + argv.fmask + ')', 'ig') : new RegExp('(.jpg|.png)', 'ig')
 ;
 
 var AnalAndResize = function(path) {
 	
-	imagic.resize({
-		srcPath : path,
-		dstPath : path + '.resize.jpg',
-		width : maxw,
-		//height : maxh,
-	}, function(err, stdout, stderr){
-		if (err) throw err;
+	imager.identify(path, function(err, info){
+		if (err) return done(err);
+		
+		//console.log(info);
+		
+		switch(info.format) {
+			
+			case 'PNG' : {
+				
+				imager.resize({
+					srcPath : path,
+					dstPath : path,//+ '.resize.png'
+					width : maxw,
+					//height : maxh,
+					format : info.format,
+					quality : 1,
+					//progressive : true,
+				}, function(_err, stdout, stderr){
+					if (_err) throw _err;
+				});
+				
+			}
+			break;
+			
+			case 'JPEG' : {
+				
+				imager.resize({
+					srcPath : path,
+					dstPath : path,//+ '.resize.jpg',
+					width : maxw,
+					//height : maxh,
+					format : info.format,
+					quality : 1,
+					progressive : true,
+				}, function(_err, stdout, stderr){
+					if (_err) throw _err;
+				});
+				
+			}
+			break;
+			
+			default : {
+				
+			}
+			break;
+			
+		}
+		
+		// { format: 'JPEG', width: 3904, height: 2622, depth: 8 }
 	});
 	
 }
@@ -72,11 +119,32 @@ var walk = function(dir, done) {
 				} else if(in_masked > -1 && stat && stat.isFile()) {
 					
 					//results.push(file);
-					//console.log(':' + _file);
+					//console.log(stat);
 					
 					//searchInFile(_file, re_search, argv.set);
 					
-					AnalAndResize(_file);
+					if(stat.size > maxsize) {
+						
+						switch(action) {
+							
+							case 'resize' : {
+								AnalAndResize(_file);
+							}
+							break;
+							
+							case 'find' : {
+								console.log(_file);
+							}
+							break;
+							
+							default : {
+								
+							}
+							break;
+							
+						}
+						
+					}
 					
 					if (!--pending) done(null, results);
 					
