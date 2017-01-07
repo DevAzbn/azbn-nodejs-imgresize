@@ -31,12 +31,16 @@ var		root = argv.dir ? argv.dir : './',
 
 var AnalAndResize = function(path) {
 	
-	imager.identify(path, function(err, info){
-		if (err) return done(err);
+	imager.identify(['-format', '%m', path], function(err, info){
+		if (err) {
+			console.log(err);
+			return;
+		}
 		
 		//console.log(info);
+		console.log(path);
 		
-		switch(info.format) {
+		switch(info) {
 			
 			case 'PNG' : {
 				
