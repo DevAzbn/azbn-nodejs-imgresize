@@ -42,7 +42,7 @@ var		root = argv.dir ? argv.dir : './',
 		maxsize = argv.maxsize ? (parseInt(argv.maxsize) * 1024) : (1024 * 1024),
 		action = argv.action ? argv.action : 'resize',
 		//re_search = new RegExp('(' + argv.search + ')', 'ig'),
-		fmask = argv.fmask ? new RegExp('(' + argv.fmask + ')', 'ig') : new RegExp('(post-big)', 'ig')
+		fmask = argv.fmask ? new RegExp('(' + argv.fmask + ')', 'ig') : new RegExp('post-big', 'ig')
 ;
 
 var AnalAndResize = function(path) {
@@ -141,7 +141,7 @@ var walk = function(dir, done) {
 		
 		list.forEach(function(file) {
 			
-			var in_masked = 0;
+			var in_masked = -1;
 			
 			if(fmask != false) {
 				in_masked = file.search(fmask);//fmask.test(file);
@@ -154,15 +154,15 @@ var walk = function(dir, done) {
 				
 				if (stat && stat.isDirectory()) {
 					
-					walk(_file, function(_err, res) {
+					walk(_file, function(__err, res) {
 						results = results.concat(res);
 						if (!--pending) done(null, results);
 					});
 					
-				} else if(in_masked == -1 && stat && stat.isFile()) {//in_masked > -1 && 
+				} else if(in_masked < 0 && stat && stat.isFile()) {//in_masked > -1 && 
 					
 					//results.push(file);
-					//console.log(stat);
+					//console.log(_file);
 					
 					//searchInFile(_file, re_search, argv.set);
 					
@@ -174,7 +174,8 @@ var walk = function(dir, done) {
 								//console.log('Before insert to queue ' + _file);
 								
 								//AnalAndResize(_file);
-								files.push(_file);
+								//files.push(_file);
+								AnalAndResize(_file);
 								
 							}
 							break;
@@ -219,7 +220,8 @@ walk(root, function(err, res){
 			
 			for(var i = 0; i < files.length; i++) {
 				
-				AnalAndResize(files[i]);
+				//AnalAndResize(files[i]);
+				//console.log(files[i]);
 				
 			}
 			
