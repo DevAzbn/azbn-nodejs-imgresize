@@ -59,7 +59,8 @@ var AnalAndResize = function(path) {
 			var __p = info.split('.');
 			
 			if(1) {//__p[1] > maxw
-				
+			//for(var j = 1; j < 10; j++) {
+			
 				var args = {
 					srcPath : path,
 					dstPath : path,
@@ -81,7 +82,8 @@ var AnalAndResize = function(path) {
 					break;
 					
 					case 'PNG' : {
-						args.quality = 0.65;
+						args.quality = 1;
+						//args.progressive = true;
 					}
 					break;
 					
@@ -101,9 +103,9 @@ var AnalAndResize = function(path) {
 							
 							if (___err) {
 								console.log(___err);
+							} else {
+								azbn.echo('Resized: ' + path);
 							}
-							
-							azbn.echo('Resized: ' + path);
 							
 						});
 						
