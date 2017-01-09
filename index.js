@@ -5,14 +5,12 @@ var cfg = {
 	},
 };
 
+var files = [];
+
 var fs = require('fs');
 var path = require('path');
 var argv = require('optimist').argv;
 //var imager = require('imagemagick');
-var vow = require('vow');
-
-var	Queue = require('vow-queue'),
-	queue = new Queue({ weightLimit : 3 });
 
 var azbn = require(cfg.path.azbnode + '/azbnode');
 //var imager = require('lwip');
@@ -47,95 +45,74 @@ var		root = argv.dir ? argv.dir : './',
 		fmask = argv.fmask ? new RegExp('(' + argv.fmask + ')', 'ig') : new RegExp('(.jpg|.png)', 'ig')
 ;
 
-var __resize = function(type, file) {
-	
-	//azbn.mdl('resizer.queue')
-	//	.add(function(next){
-			
-			console.log('Before AnalAndResize (' + type + '): ' + file);
-			
-			switch(type) {
-				
-				case 'PNG' : {
-					
-					azbn.mdl('imager').resize({
-						srcPath : path,
-						dstPath : path,//+ '.resize.png'
-						width : maxw,
-						//height : maxh,
-						format : type,//.format,
-						//quality : 1,
-						//progressive : true,
-					}, function(___err, stdout, stderr){
-						
-						if (___err) {
-							console.log(___err);
-						}
-						
-						//console.log(path);
-						console.log('Resized: ' + file);
-						
-						//next();
-						
-					});
-					
-				}
-				break;
-				
-				case 'JPEG' : {
-					
-					azbn.mdl('imager').resize({
-						srcPath : path,
-						dstPath : path,//+ '.resize.jpg',
-						width : maxw,
-						//height : maxh,
-						format : type,//.format,
-						quality : 1,
-						progressive : true,
-					}, function(___err, stdout, stderr){
-						
-						if (___err) {
-							console.log(___err);
-						}
-						
-						//console.log(path);
-						console.log('Resized: ' + file);
-						
-						//next();
-						
-					});
-					
-				}
-				break;
-				
-				default : {
-					
-					//next();
-					
-				}
-				break;
-				
-			}
-			
-	//	next();
-	//	
-	//}, 333)
-	//;
-	
-};
-
 var AnalAndResize = function(path) {
 	
-	azbn.mdl('imager').identify(['-format', '%m', path], function(__err, info){
+	azbn.mdl('imager').identify(['-format', '%m.%w.%h', path], function(__err, info){
 		
 		if (__err) {
 			
-			console.log(__err);
+			azbn.echo(__err);
 			return;
 			
 		} else {
 			
-			__resize(info, path);
+			var __p = info.split('.');
+			
+			if(1) {//__p[1] > maxw
+				
+				var args = {
+					srcPath : path,
+					dstPath : path,
+					width : maxw,
+					//height : maxh,
+					format : __p[0],//.format,
+				};
+				
+				if(__p[1] < maxw) {
+					args.width = __p[1];
+				}
+				
+				switch(__p[0]) {
+					
+					case 'JPEG' : {
+						args.quality = 0.85;
+						args.progressive = true;
+					}
+					break;
+					
+					case 'PNG' : {
+						args.quality = 0.65;
+					}
+					break;
+					
+					default : {
+						
+					}
+					break;
+					
+				}
+				
+				azbn.mdl('resizer.queue')
+					.add(function(next){
+						
+						azbn.echo('Set queue-item (' + __p[0] + '): ' + path);
+						
+						azbn.mdl('imager').resize(args, function(___err, stdout, stderr){
+							
+							if (___err) {
+								console.log(___err);
+							}
+							
+							azbn.echo('Resized: ' + path);
+							
+						});
+						
+						next();
+						
+					}, 250)
+				;
+				
+			}
 			
 		}
 		
@@ -192,32 +169,16 @@ var walk = function(dir, done) {
 							case 'resize' : {
 								//console.log('Before insert to queue ' + _file);
 								
-								queue.enqueue(function() { // function returns a promise
-									
-									azbn.mdl('imager').identify(['-format', '%m', _file], function(__err, info){
-										
-										if (__err) {
-											
-											console.log(__err);
-											return;
-											
-										} else {
-											
-											__resize(info, _file);
-											
-										}
-										
-										// { format: 'JPEG', width: 3904, height: 2622, depth: 8 }
-									});
-									
-									return promise;
-								});
+								//AnalAndResize(_file);
+								files.push(_file);
 								
 							}
 							break;
 							
 							case 'find' : {
+								
 								console.log(_file);
+								
 							}
 							break;
 							
@@ -242,12 +203,24 @@ var walk = function(dir, done) {
 	
 };
 
-queue.start();
-
 walk(root, function(err, res){
+	
 	if(err) {
+		
 		console.log(err);
+		
 	} else {
 		
+		if(files.length) {
+			
+			for(var i = 0; i < files.length; i++) {
+				
+				AnalAndResize(files[i]);
+				
+			}
+			
+		}
+		
 	}
+	
 });
