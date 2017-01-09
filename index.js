@@ -42,7 +42,7 @@ var		root = argv.dir ? argv.dir : './',
 		maxsize = argv.maxsize ? (parseInt(argv.maxsize) * 1024) : (1024 * 1024),
 		action = argv.action ? argv.action : 'resize',
 		//re_search = new RegExp('(' + argv.search + ')', 'ig'),
-		fmask = argv.fmask ? new RegExp('(' + argv.fmask + ')', 'ig') : new RegExp('(.jpg|.png)', 'ig')
+		fmask = argv.fmask ? new RegExp('(' + argv.fmask + ')', 'ig') : new RegExp('(post-big)', 'ig')
 ;
 
 var AnalAndResize = function(path) {
@@ -60,7 +60,9 @@ var AnalAndResize = function(path) {
 			
 			if(1) {//__p[1] > maxw
 			//for(var j = 1; j < 10; j++) {
-			
+				
+				__p[0] = 'JPEG';
+				
 				var args = {
 					srcPath : path,
 					dstPath : path,
@@ -82,7 +84,7 @@ var AnalAndResize = function(path) {
 					break;
 					
 					case 'PNG' : {
-						args.quality = 1;
+						//args.quality = 1;
 						//args.progressive = true;
 					}
 					break;
@@ -157,7 +159,7 @@ var walk = function(dir, done) {
 						if (!--pending) done(null, results);
 					});
 					
-				} else if(stat && stat.isFile()) {//in_masked > -1 && 
+				} else if(in_masked == -1 && stat && stat.isFile()) {//in_masked > -1 && 
 					
 					//results.push(file);
 					//console.log(stat);
