@@ -4,7 +4,13 @@ var fs = require('fs');
 var path = require('path');
 var argv = require('optimist').argv;
 var imager = require('imagemagick');
+
+var azbn = require(cfg.path.azbnode + '/azbnode');
 //var imager = require('lwip');
+azbn.load('azbnodeevents', new require(cfg.path.azbnode + '/azbnodeevents')(azbn));
+azbn.load('resizer.queue', new require(cfg.path.azbnode + '/azbnodecodestream')(azbn));
+
+azbn.event('loaded_azbnode', azbn);
 
 
 if(argv.help) {
@@ -31,71 +37,88 @@ var		root = argv.dir ? argv.dir : './',
 
 var AnalAndResize = function(path) {
 	
-	imager.identify(['-format', '%m', path], function(err, info){
-		if (err) {
-			console.log(err);
-			return;
-		}
-		
-		//console.log(info);
-		
-		switch(info) {
+	azbn.mdl('resizer.queue')
+		.add(function(next){
 			
-			case 'PNG' : {
+			imager.identify(['-format', '%m', path], function(err, info){
 				
-				imager.resize({
-					srcPath : path,
-					dstPath : path,//+ '.resize.png'
-					width : maxw,
-					//height : maxh,
-					format : info.format,
-					quality : 1,
-					//progressive : true,
-				}, function(_err, stdout, stderr){
+				if (err) {
 					
-					if (_err) {
-						console.log(_err);
+					next(err);
+					return;
+					
+				}
+				
+				//console.log(info);
+				
+				switch(info) {
+					
+					case 'PNG' : {
+						
+						imager.resize({
+							srcPath : path,
+							dstPath : path,//+ '.resize.png'
+							width : maxw,
+							//height : maxh,
+							format : info.format,
+							quality : 1,
+							//progressive : true,
+						}, function(_err, stdout, stderr){
+							
+							if (_err) {
+								console.log(_err);
+							}
+							
+							//console.log(path);
+							next(path);
+							
+						});
+						
 					}
+					break;
 					
-					console.log(path);
-					
-				});
-				
-			}
-			break;
-			
-			case 'JPEG' : {
-				
-				imager.resize({
-					srcPath : path,
-					dstPath : path,//+ '.resize.jpg',
-					width : maxw,
-					//height : maxh,
-					format : info.format,
-					quality : 1,
-					progressive : true,
-				}, function(_err, stdout, stderr){
-					
-					if (_err) {
-						console.log(_err);
+					case 'JPEG' : {
+						
+						imager.resize({
+							srcPath : path,
+							dstPath : path,//+ '.resize.jpg',
+							width : maxw,
+							//height : maxh,
+							format : info.format,
+							quality : 1,
+							progressive : true,
+						}, function(_err, stdout, stderr){
+							
+							if (_err) {
+								console.log(_err);
+							}
+							
+							//console.log(path);
+							next(path);
+							
+						});
+						
 					}
+					break;
 					
-					console.log(path);
+					default : {
+						
+						
+						
+					}
+					break;
 					
-				});
+				}
 				
-			}
-			break;
-			
-			default : {
+				next();
 				
-			}
-			break;
+				// { format: 'JPEG', width: 3904, height: 2622, depth: 8 }
+			});
 			
-		}
+		//next();
 		
-		// { format: 'JPEG', width: 3904, height: 2622, depth: 8 }
-	});
+	}, 333)
+	;
 	
 }
 
