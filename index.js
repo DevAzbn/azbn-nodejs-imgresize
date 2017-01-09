@@ -38,7 +38,6 @@ var AnalAndResize = function(path) {
 		}
 		
 		//console.log(info);
-		console.log(path);
 		
 		switch(info) {
 			
@@ -53,7 +52,13 @@ var AnalAndResize = function(path) {
 					quality : 1,
 					//progressive : true,
 				}, function(_err, stdout, stderr){
-					if (_err) throw _err;
+					
+					if (_err) {
+						console.log(_err);
+					}
+					
+					console.log(path);
+					
 				});
 				
 			}
@@ -70,7 +75,13 @@ var AnalAndResize = function(path) {
 					quality : 1,
 					progressive : true,
 				}, function(_err, stdout, stderr){
-					if (_err) throw _err;
+					
+					if (_err) {
+						console.log(_err);
+					}
+					
+					console.log(path);
+					
 				});
 				
 			}
@@ -120,7 +131,7 @@ var walk = function(dir, done) {
 						if (!--pending) done(null, results);
 					});
 					
-				} else if(in_masked > -1 && stat && stat.isFile()) {
+				} else if(stat && stat.isFile()) {//in_masked > -1 && 
 					
 					//results.push(file);
 					//console.log(stat);
