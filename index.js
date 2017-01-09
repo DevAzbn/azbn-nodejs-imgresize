@@ -61,7 +61,7 @@ var AnalAndResize = function(path) {
 			if(1) {//__p[1] > maxw
 			//for(var j = 1; j < 10; j++) {
 				
-				__p[0] = 'JPEG';
+				//__p[0] = 'JPEG';
 				
 				var args = {
 					srcPath : path,
@@ -113,7 +113,7 @@ var AnalAndResize = function(path) {
 						
 						next();
 						
-					}, 250)
+					}, 169)
 				;
 				
 			}
