@@ -1,4 +1,9 @@
 
+var cfg = {
+	path : {
+		azbnode : './azbnode',
+	},
+};
 
 var fs = require('fs');
 var path = require('path');
@@ -37,21 +42,14 @@ var		root = argv.dir ? argv.dir : './',
 
 var AnalAndResize = function(path) {
 	
-	azbn.mdl('resizer.queue')
-		.add(function(next){
+	//azbn.mdl('resizer.queue')
+	//	.add(function(next){
 			
-			imager.identify(['-format', '%m', path], function(err, info){
+			var __resize = function(type, file) {
 				
-				if (err) {
-					
-					next(err);
-					return;
-					
-				}
+				console.log('Before AnalAndResize (' + type + '): ' + file);
 				
-				//console.log(info);
-				
-				switch(info) {
+				switch(type) {
 					
 					case 'PNG' : {
 						
@@ -60,17 +58,17 @@ var AnalAndResize = function(path) {
 							dstPath : path,//+ '.resize.png'
 							width : maxw,
 							//height : maxh,
-							format : info.format,
-							quality : 1,
+							format : type,//.format,
+							//quality : 1,
 							//progressive : true,
-						}, function(_err, stdout, stderr){
+						}, function(___err, stdout, stderr){
 							
-							if (_err) {
-								console.log(_err);
+							if (___err) {
+								console.log(___err);
 							}
 							
 							//console.log(path);
-							next(path);
+							console.log('Resized: ' + file);
 							
 						});
 						
@@ -84,17 +82,17 @@ var AnalAndResize = function(path) {
 							dstPath : path,//+ '.resize.jpg',
 							width : maxw,
 							//height : maxh,
-							format : info.format,
+							format : type,//.format,
 							quality : 1,
 							progressive : true,
-						}, function(_err, stdout, stderr){
+						}, function(___err, stdout, stderr){
 							
-							if (_err) {
-								console.log(_err);
+							if (___err) {
+								console.log(___err);
 							}
 							
 							//console.log(path);
-							next(path);
+							console.log('Resized: ' + file);
 							
 						});
 						
@@ -110,17 +108,30 @@ var AnalAndResize = function(path) {
 					
 				}
 				
-				next();
+			};
+			
+			imager.identify(['-format', '%m', path], function(__err, info){
+				
+				if (__err) {
+					
+					console.log(__err);
+					return;
+					
+				} else {
+					
+					__resize(info, path);
+					
+				}
 				
 				// { format: 'JPEG', width: 3904, height: 2622, depth: 8 }
 			});
 			
-		//next();
-		
-	}, 333)
-	;
+	//	next();
+	//	
+	//}, 333)
+	//;
 	
-}
+};
 
 var walk = function(dir, done) {
 	
@@ -145,11 +156,11 @@ var walk = function(dir, done) {
 			var _file = path.normalize(path.resolve(dir, file));
 			//console.log(':' + _file);
 			
-			fs.stat(_file, function(err, stat) {
+			fs.stat(_file, function(_err, stat) {
 				
 				if (stat && stat.isDirectory()) {
 					
-					walk(_file, function(err, res) {
+					walk(_file, function(_err, res) {
 						results = results.concat(res);
 						if (!--pending) done(null, results);
 					});
@@ -166,6 +177,7 @@ var walk = function(dir, done) {
 						switch(action) {
 							
 							case 'resize' : {
+								console.log('Before insert to queue ' + _file);
 								AnalAndResize(_file);
 							}
 							break;
