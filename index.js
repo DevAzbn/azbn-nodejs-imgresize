@@ -42,7 +42,7 @@ var		root = argv.dir ? argv.dir : './',
 		maxsize = argv.maxsize ? (parseInt(argv.maxsize) * 1024) : (1024 * 1024),
 		action = argv.action ? argv.action : 'resize',
 		//re_search = new RegExp('(' + argv.search + ')', 'ig'),
-		fmask = argv.fmask ? new RegExp('(' + argv.fmask + ')', 'ig') : new RegExp('post-big', 'ig')
+		fmask = argv.fmask ? new RegExp('(' + argv.fmask + ')', 'ig') : new RegExp('(.jpg|.png)', 'ig')
 ;
 
 var AnalAndResize = function(path) {
@@ -159,7 +159,7 @@ var walk = function(dir, done) {
 						if (!--pending) done(null, results);
 					});
 					
-				} else if(in_masked < 0 && stat && stat.isFile()) {//in_masked > -1 && 
+				} else if(in_masked > -1 && stat && stat.isFile()) {//in_masked > -1 && 
 					
 					//results.push(file);
 					//console.log(_file);
@@ -174,8 +174,7 @@ var walk = function(dir, done) {
 								//console.log('Before insert to queue ' + _file);
 								
 								//AnalAndResize(_file);
-								//files.push(_file);
-								AnalAndResize(_file);
+								files.push(_file);
 								
 							}
 							break;
@@ -220,7 +219,7 @@ walk(root, function(err, res){
 			
 			for(var i = 0; i < files.length; i++) {
 				
-				//AnalAndResize(files[i]);
+				AnalAndResize(files[i]);
 				//console.log(files[i]);
 				
 			}
